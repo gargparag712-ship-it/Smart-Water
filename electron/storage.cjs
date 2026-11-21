@@ -7,6 +7,7 @@ const DEFAULT_DATA = Object.freeze({
   inventoryTransactions: [],
   maintenance: [],
   finances: [],
+  budgets: [],
   suppliers: [],
 });
 

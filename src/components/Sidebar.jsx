@@ -39,7 +39,7 @@ export default function Sidebar() {
       <div className="sidebar-spacer" />
       <div className="support-card"><span className="support-icon"><LifeBuoy size={17} /></span><div><strong>Need a hand?</strong><span>Visit the help centre</span></div><span className="support-arrow">↗</span></div>
       <ConnectionStatus />
-      <div className="sidebar-version">SMARTWATER <span>·</span> PHASE 2</div>
+      <div className="sidebar-version">SMARTWATER <span>·</span> PHASE 6</div>
     </aside>
   );
 }

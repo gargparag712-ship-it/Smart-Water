@@ -3,6 +3,7 @@ import AppShell from './components/AppShell.jsx';
 import AssetsPage from './pages/AssetsPage.jsx';
 import InventoryPage from './pages/InventoryPage.jsx';
 import MaintenancePage from './pages/MaintenancePage.jsx';
+import FinancePage from './pages/FinancePage.jsx';
 import DashboardPage from './pages/DashboardPage.jsx';
 import PlaceholderPage from './pages/PlaceholderPage.jsx';
 import { pageDetails } from './data/navigation.js';
@@ -15,7 +16,8 @@ export default function App() {
         <Route path="/assets" element={<AssetsPage />} />
         <Route path="/inventory" element={<InventoryPage />} />
         <Route path="/maintenance" element={<MaintenancePage />} />
-        {pageDetails.filter((page) => page.path !== '/' && page.path !== '/assets' && page.path !== '/inventory' && page.path !== '/maintenance').map((page) => (
+        <Route path="/finance" element={<FinancePage />} />
+        {pageDetails.filter((page) => page.path !== '/' && page.path !== '/assets' && page.path !== '/inventory' && page.path !== '/maintenance' && page.path !== '/finance').map((page) => (
           <Route key={page.path} path={page.path} element={<PlaceholderPage page={page} />} />
         ))}
       </Route>

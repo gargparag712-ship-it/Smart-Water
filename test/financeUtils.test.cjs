@@ -1,0 +1,8 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs'); const path = require('node:path'); const { transformSync } = require('esbuild'); const { test } = require('node:test');
+const source = fs.readFileSync(path.join(__dirname, '../src/utils/finance.js'), 'utf8'); const compiled = transformSync(source, { format: 'cjs', loader: 'js' }); const mod = { exports: {} }; new Function('module', 'exports', compiled.code)(mod, mod.exports);
+const { budgetProgress, filterTransactions, summarizeTransactions } = mod.exports;
+const rows = [{ id: 'a', type: 'Income', title: 'Water tariff', category: 'Water Charges', amountPaise: 50000, date: '2026-11-10', transactionCode: 'FIN-1', partyName: 'Residents', referenceNumber: '' }, { id: 'b', type: 'Expense', title: 'Pump repair', category: 'Equipment Repair', amountPaise: 20000, date: '2026-11-15', transactionCode: 'FIN-2', partyName: 'Repair shop', referenceNumber: 'R-1' }];
+test('calculates finance summary correctly for an empty dataset', () => { assert.deepEqual(summarizeTransactions([]), { totalIncomePaise: 0, totalExpensesPaise: 0, netBalancePaise: 0, currentMonthExpensesPaise: 0 }); });
+test('filters by search, type, category and date range', () => { assert.deepEqual(filterTransactions(rows, { search: 'repair', type: 'Expense', category: 'Equipment Repair', fromDate: '2026-11-12', toDate: '2026-11-20' }).map((row) => row.id), ['b']); });
+test('detects exceeded budgets and remaining balances', () => { assert.deepEqual(budgetProgress({ budgetAmountPaise: 10000, actualSpentPaise: 12500 }), { remainingPaise: -2500, exceeded: true, percent: 100 }); });

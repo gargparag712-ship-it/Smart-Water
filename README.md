@@ -21,7 +21,7 @@ Asset Management, Inventory and Maintenance are functional local modules. Financ
 
 The Asset Management section reads and writes `assets.json` through five narrow preload methods: `listAssets`, `getAsset`, `createAsset`, `updateAsset`, and `deleteAsset`. Asset IDs and timestamps are assigned in the Electron main process. Asset codes are normalized and checked for uniqueness there, and the JSON collection is written atomically through the existing storage service. The dashboard reads live asset totals and status distribution; its other module figures and activity examples remain labeled sample data.
 
-Run `npm test` for the asset service and search/filter checks.
+Run `npm test` for automated service, workflow, calculations, persistence, filtering, and preload API checks.
 
 ## Inventory management
 
@@ -30,3 +30,7 @@ Inventory items are stored in `inventory.json`; stock movements are recorded in 
 ## Maintenance management
 
 Maintenance work orders are stored in `maintenance.json` and reference asset IDs in `assets.json`. Work-order codes are generated in the main process. Status changes follow Scheduled → In Progress → Completed, or Scheduled → Cancelled. Completion records include work performed and calculated labour plus parts cost. Completed/cancelled records are retained, and assets linked to maintenance history cannot be deleted. Sidebar, dashboard and alert counts use local maintenance records and the device's local calendar date.
+
+## Finance management
+
+Income and expense transactions are stored in `finances.json` as integer paise values, with human-readable transaction codes generated in the main process. Monthly category budgets are stored in `budgets.json` and show actual expense totals calculated from saved transactions. Optional expense links to maintenance work orders preserve a code snapshot; finance never copies maintenance costs automatically.

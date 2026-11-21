@@ -4,12 +4,14 @@ const { ensureStorage } = require('./storage.cjs');
 const { AssetServiceError, createAssetService } = require('./assetsService.cjs');
 const { InventoryServiceError, createInventoryService } = require('./inventoryService.cjs');
 const { MaintenanceServiceError, createMaintenanceService } = require('./maintenanceService.cjs');
+const { FinanceServiceError, createFinanceService } = require('./financeService.cjs');
 const { createOperationQueue } = require('./operationQueue.cjs');
 
 let storageReady = false;
 let assetService;
 let inventoryService;
 let maintenanceService;
+let financeService;
 const relatedDataQueue = createOperationQueue();
 
 function createWindow() {
@@ -129,6 +131,38 @@ function registerMaintenanceHandlers() {
   }
 }
 
+function registerFinanceHandlers() {
+  const handlers = {
+    'finance:list': (filters) => financeService.listTransactions(filters),
+    'finance:get': (id) => financeService.getTransaction(id),
+    'finance:create': (transaction) => financeService.createTransaction(transaction),
+    'finance:update': (id, transaction) => financeService.updateTransaction(id, transaction),
+    'finance:delete': (id) => financeService.deleteTransaction(id),
+    'finance:summary': () => financeService.getSummary(),
+    'finance:budgets:list': () => financeService.listBudgets(),
+    'finance:budgets:create': (budget) => financeService.createBudget(budget),
+    'finance:budgets:update': (id, budget) => financeService.updateBudget(id, budget),
+    'finance:budgets:delete': (id) => financeService.deleteBudget(id),
+    'finance:maintenance-orders': () => maintenanceService.listRecords(),
+  };
+  for (const [channel, operation] of Object.entries(handlers)) {
+    ipcMain.handle(channel, async (_event, ...args) => {
+      try {
+        if (!storageReady || !financeService) throw new Error('Storage is not ready.');
+        return { ok: true, data: await operation(...args) };
+      } catch (error) {
+        if (!(error instanceof FinanceServiceError)) console.error(`SmartWater finance operation failed (${channel}):`, error);
+        const message = error instanceof FinanceServiceError
+          ? error.message
+          : error instanceof SyntaxError
+            ? 'A finance data file is malformed. No changes were saved.'
+            : 'SmartWater could not read or save finance records. Please try again.';
+        return { ok: false, error: message };
+      }
+    });
+  }
+}
+
 app.whenReady().then(async () => {
   try {
     const dataDirectory = path.join(app.getPath('userData'), 'data');
@@ -136,9 +170,11 @@ app.whenReady().then(async () => {
     assetService = createAssetService(dataDirectory, relatedDataQueue);
     inventoryService = createInventoryService(dataDirectory);
     maintenanceService = createMaintenanceService(dataDirectory, relatedDataQueue);
+    financeService = createFinanceService(dataDirectory, relatedDataQueue);
     registerAssetHandlers();
     registerInventoryHandlers();
     registerMaintenanceHandlers();
+    registerFinanceHandlers();
     storageReady = true;
     createWindow();
   } catch (error) {

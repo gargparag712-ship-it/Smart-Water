@@ -8,7 +8,7 @@ export const pageDetails = [
   { label: 'Assets', title: 'Asset Management', path: '/assets', icon: Boxes, description: 'Track pumps, motors, pipelines, valves and other scheme assets.' },
   { label: 'Inventory', title: 'Inventory Management', path: '/inventory', icon: Package, description: 'Manage consumables, spare parts and stock levels across your schemes.' },
   { label: 'Maintenance', title: 'Maintenance Management', path: '/maintenance', icon: Wrench, description: 'Plan inspections, coordinate repairs and preserve maintenance history for registered assets.' },
-  { label: 'Finance', path: '/finance', icon: CircleDollarSign, description: 'Review scheme income, expenses and financial records.' },
+  { label: 'Finance', title: 'Finance Management', path: '/finance', icon: CircleDollarSign, description: 'Track scheme income, operating expenses and monthly category budgets.' },
   { label: 'Suppliers', path: '/suppliers', icon: Truck, description: 'Keep supplier details and procurement contacts together.' },
   { label: 'Reports', path: '/reports', icon: ChartNoAxesCombined, description: 'Explore operational summaries and scheme reports.' },
   { label: 'Settings', path: '/settings', icon: Settings2, description: 'Manage preferences for your SmartWater workspace.' },
