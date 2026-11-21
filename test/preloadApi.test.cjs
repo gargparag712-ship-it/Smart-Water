@@ -2,7 +2,7 @@ const assert = require('node:assert/strict');
 const Module = require('node:module');
 const { test } = require('node:test');
 
-test('preload exposes only health plus scoped asset and inventory IPC functions', async () => {
+test('preload exposes only health plus scoped asset, inventory and maintenance IPC functions', async () => {
   const preloadPath = require.resolve('../electron/preload.cjs');
   const originalLoad = Module._load;
   const calls = [];
@@ -35,9 +35,10 @@ test('preload exposes only health plus scoped asset and inventory IPC functions'
 
   assert.equal(exposedName, 'smartWater');
   assert.deepEqual(Object.keys(exposedApi).sort(), [
-    'checkHealth', 'createAsset', 'createInventoryItem', 'deleteAsset', 'deleteInventoryItem',
-    'getAsset', 'getInventoryItem', 'listAssets', 'listInventoryItems', 'listInventoryTransactions',
-    'stockIn', 'stockOut', 'updateAsset', 'updateInventoryItem',
+    'checkHealth', 'createAsset', 'createInventoryItem', 'createMaintenanceRecord', 'deleteAsset', 'deleteInventoryItem',
+    'getAsset', 'getInventoryItem', 'getMaintenanceRecord', 'getMaintenanceSummary', 'listAssetMaintenanceHistory',
+    'listAssets', 'listInventoryItems', 'listInventoryTransactions', 'listMaintenanceAssets', 'listMaintenanceRecords',
+    'stockIn', 'stockOut', 'updateAsset', 'updateInventoryItem', 'updateMaintenanceRecord', 'updateMaintenanceStatus',
   ]);
   await exposedApi.checkHealth();
   await exposedApi.listAssets();
@@ -53,6 +54,14 @@ test('preload exposes only health plus scoped asset and inventory IPC functions'
   await exposedApi.listInventoryTransactions({ transactionType: 'IN' });
   await exposedApi.stockIn({ itemId: 'item-id', quantity: 3 });
   await exposedApi.stockOut({ itemId: 'item-id', quantity: 1 });
+  await exposedApi.listMaintenanceRecords({ status: 'Scheduled' });
+  await exposedApi.getMaintenanceRecord('work-order-id');
+  await exposedApi.createMaintenanceRecord({ assetId: 'asset-id' });
+  await exposedApi.updateMaintenanceRecord('work-order-id', { title: 'Inspection' });
+  await exposedApi.updateMaintenanceStatus('work-order-id', { status: 'In Progress' });
+  await exposedApi.listAssetMaintenanceHistory('asset-id');
+  await exposedApi.listMaintenanceAssets();
+  await exposedApi.getMaintenanceSummary();
   assert.deepEqual(calls, [
     ['app:health-check'],
     ['assets:list'],
@@ -68,5 +77,13 @@ test('preload exposes only health plus scoped asset and inventory IPC functions'
     ['inventory:transactions', { transactionType: 'IN' }],
     ['inventory:stock-in', { itemId: 'item-id', quantity: 3 }],
     ['inventory:stock-out', { itemId: 'item-id', quantity: 1 }],
+    ['maintenance:list', { status: 'Scheduled' }],
+    ['maintenance:get', 'work-order-id'],
+    ['maintenance:create', { assetId: 'asset-id' }],
+    ['maintenance:update', 'work-order-id', { title: 'Inspection' }],
+    ['maintenance:update-status', 'work-order-id', { status: 'In Progress' }],
+    ['maintenance:asset-history', 'asset-id'],
+    ['maintenance:assets'],
+    ['maintenance:summary'],
   ]);
 });

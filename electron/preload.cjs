@@ -16,4 +16,12 @@ contextBridge.exposeInMainWorld('smartWater', {
   listInventoryTransactions: (filters) => ipcRenderer.invoke('inventory:transactions', filters),
   stockIn: (movement) => ipcRenderer.invoke('inventory:stock-in', movement),
   stockOut: (movement) => ipcRenderer.invoke('inventory:stock-out', movement),
+  listMaintenanceRecords: (filters) => ipcRenderer.invoke('maintenance:list', filters),
+  getMaintenanceRecord: (id) => ipcRenderer.invoke('maintenance:get', id),
+  createMaintenanceRecord: (record) => ipcRenderer.invoke('maintenance:create', record),
+  updateMaintenanceRecord: (id, record) => ipcRenderer.invoke('maintenance:update', id, record),
+  updateMaintenanceStatus: (id, transition) => ipcRenderer.invoke('maintenance:update-status', id, transition),
+  listAssetMaintenanceHistory: (assetId) => ipcRenderer.invoke('maintenance:asset-history', assetId),
+  listMaintenanceAssets: () => ipcRenderer.invoke('maintenance:assets'),
+  getMaintenanceSummary: () => ipcRenderer.invoke('maintenance:summary'),
 });

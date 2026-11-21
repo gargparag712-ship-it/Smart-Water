@@ -3,10 +3,14 @@ const path = require('node:path');
 const { ensureStorage } = require('./storage.cjs');
 const { AssetServiceError, createAssetService } = require('./assetsService.cjs');
 const { InventoryServiceError, createInventoryService } = require('./inventoryService.cjs');
+const { MaintenanceServiceError, createMaintenanceService } = require('./maintenanceService.cjs');
+const { createOperationQueue } = require('./operationQueue.cjs');
 
 let storageReady = false;
 let assetService;
 let inventoryService;
+let maintenanceService;
+const relatedDataQueue = createOperationQueue();
 
 function createWindow() {
   const window = new BrowserWindow({
@@ -96,14 +100,45 @@ function registerInventoryHandlers() {
   }
 }
 
+function registerMaintenanceHandlers() {
+  const handlers = {
+    'maintenance:list': (filters) => maintenanceService.listRecords(filters),
+    'maintenance:get': (id) => maintenanceService.getRecord(id),
+    'maintenance:create': (record) => maintenanceService.createRecord(record),
+    'maintenance:update': (id, record) => maintenanceService.updateRecord(id, record),
+    'maintenance:update-status': (id, transition) => maintenanceService.updateStatus(id, transition),
+    'maintenance:asset-history': (assetId) => maintenanceService.listAssetHistory(assetId),
+    'maintenance:assets': () => maintenanceService.listAssets(),
+    'maintenance:summary': () => maintenanceService.getSummary(),
+  };
+  for (const [channel, operation] of Object.entries(handlers)) {
+    ipcMain.handle(channel, async (_event, ...args) => {
+      try {
+        if (!storageReady || !maintenanceService) throw new Error('Storage is not ready.');
+        return { ok: true, data: await operation(...args) };
+      } catch (error) {
+        if (!(error instanceof MaintenanceServiceError)) console.error(`SmartWater maintenance operation failed (${channel}):`, error);
+        const message = error instanceof MaintenanceServiceError
+          ? error.message
+          : error instanceof SyntaxError
+            ? 'A maintenance data file is malformed. No changes were saved.'
+            : 'SmartWater could not read or save maintenance records. Please try again.';
+        return { ok: false, error: message };
+      }
+    });
+  }
+}
+
 app.whenReady().then(async () => {
   try {
     const dataDirectory = path.join(app.getPath('userData'), 'data');
     await ensureStorage(dataDirectory);
-    assetService = createAssetService(dataDirectory);
+    assetService = createAssetService(dataDirectory, relatedDataQueue);
     inventoryService = createInventoryService(dataDirectory);
+    maintenanceService = createMaintenanceService(dataDirectory, relatedDataQueue);
     registerAssetHandlers();
     registerInventoryHandlers();
+    registerMaintenanceHandlers();
     storageReady = true;
     createWindow();
   } catch (error) {

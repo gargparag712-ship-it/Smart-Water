@@ -1,0 +1,22 @@
+import { useState } from 'react';
+import { X } from 'lucide-react';
+const blank = { assetId: '', maintenanceType: 'Preventive', title: '', description: '', priority: 'Medium', scheduledDate: '', assignedTo: '', remarks: '' };
+export default function WorkOrderDialog({ record, assets, busy, error, onClose, onSave }) {
+  const [form, setForm] = useState(() => record ? { assetId: record.assetId, maintenanceType: record.maintenanceType, title: record.title, description: record.description, priority: record.priority, scheduledDate: record.scheduledDate, assignedTo: record.assignedTo, remarks: record.remarks } : blank);
+  const [issues, setIssues] = useState({});
+  function change(event) { setForm((old) => ({ ...old, [event.target.name]: event.target.value })); setIssues((old) => ({ ...old, [event.target.name]: '' })); }
+  function submit(event) { event.preventDefault(); const next = {}; if (!form.assetId) next.assetId = 'Select an asset.'; if (!form.title.trim()) next.title = 'Work title is required.'; if (!form.scheduledDate) next.scheduledDate = 'Scheduled date is required.'; setIssues(next); if (!Object.keys(next).length) onSave(form); }
+  const field = (name, label, props = {}) => <label className={`maintenance-field${issues[name] ? ' has-error' : ''}`}><span>{label}</span><input name={name} value={form[name]} onChange={change} {...props} />{issues[name] && <small>{issues[name]}</small>}</label>;
+  return <div className="dialog-backdrop" role="presentation"><section className="asset-dialog maintenance-dialog" role="dialog" aria-modal="true" aria-labelledby="work-order-form-title">
+    <header className="dialog-header"><div><span className="dialog-eyebrow">MAINTENANCE REGISTER</span><h2 id="work-order-form-title">{record ? `Edit ${record.workOrderCode}` : 'Create work order'}</h2><p>{record ? 'Update the planned maintenance details.' : 'Schedule work against an existing registered asset.'}</p></div><button className="dialog-close" type="button" onClick={onClose} aria-label="Close form"><X size={18} /></button></header>
+    <form onSubmit={submit}><div className="maintenance-form-scroll">{error && <div className="form-feedback error" role="alert">{error}</div>}{!assets.length && <div className="form-feedback error" role="alert">Add an asset in Asset Management before creating a work order.</div>}<div className="maintenance-form-grid">
+      <label className={`maintenance-field full-width${issues.assetId ? ' has-error' : ''}`}><span>Asset *</span><select name="assetId" value={form.assetId} onChange={change}><option value="">Select an asset</option>{assets.map((asset) => <option value={asset.id} key={asset.id}>{asset.assetCode} · {asset.name} {asset.location ? `— ${asset.location}` : ''}</option>)}</select>{issues.assetId && <small>{issues.assetId}</small>}</label>
+      <label className="maintenance-field"><span>Maintenance type *</span><select name="maintenanceType" value={form.maintenanceType} onChange={change}><option>Preventive</option><option>Corrective</option></select></label>
+      {field('title', 'Work title *', { maxLength: 160, placeholder: 'e.g. Quarterly pump inspection' })}
+      <label className="maintenance-field"><span>Priority *</span><select name="priority" value={form.priority} onChange={change}><option>Low</option><option>Medium</option><option>High</option><option>Critical</option></select></label>
+      {field('scheduledDate', 'Scheduled date *', { type: 'date' })}{field('assignedTo', 'Assigned technician', { maxLength: 120, placeholder: 'Optional' })}
+      <label className="maintenance-field full-width"><span>Work description</span><textarea name="description" value={form.description} onChange={change} rows={3} maxLength={3000} placeholder="Describe the planned inspection or repair." /></label>
+      <label className="maintenance-field full-width"><span>Remarks</span><textarea name="remarks" value={form.remarks} onChange={change} rows={2} maxLength={2000} placeholder="Optional notes" /></label>
+    </div></div><footer className="dialog-footer"><span className="dialog-footnote">Work order code is generated automatically.</span><div><button className="button-secondary" type="button" onClick={onClose} disabled={busy}>Cancel</button><button className="button-primary" type="submit" disabled={busy || !assets.length}>{busy ? 'Saving…' : record ? 'Save changes' : 'Create work order'}</button></div></footer></form>
+  </section></div>;
+}

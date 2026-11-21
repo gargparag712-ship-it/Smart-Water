@@ -3,7 +3,7 @@ export const summaryCards = [
   { label: 'Active assets', value: '—', detail: 'Local asset records', change: 'Reading local records', tone: 'green', icon: 'active', source: 'live' },
   { label: 'Inventory items', value: '—', detail: 'Local inventory records', change: 'Reading local records', tone: 'blue', icon: 'inventory', source: 'live' },
   { label: 'Low stock alerts', value: '—', detail: 'At or below minimum stock', change: 'Reading local records', tone: 'amber', icon: 'stock', source: 'live' },
-  { label: 'Pending maintenance', value: '8', detail: 'Scheduled work orders', change: '2 overdue', tone: 'violet', icon: 'maintenance', source: 'demo' },
+  { label: 'Pending maintenance', value: '—', detail: 'Local maintenance work orders', change: 'Reading local records', tone: 'violet', icon: 'maintenance', source: 'live' },
   { label: 'Monthly expenses', value: '₹2.84L', detail: 'Illustrative · November', change: '6% below October', tone: 'rose', icon: 'expenses', source: 'demo' },
 ];
 
@@ -23,8 +23,3 @@ export const recentActivities = [
   { type: 'finance', title: 'Repair expense recorded', subtitle: 'Motor bearing replacement', time: 'Yesterday, 1:05 PM', color: 'violet' },
 ];
 
-export const alerts = [
-  { level: 'critical', title: 'Low stock: Chlorine tablets', detail: '4 packs remaining · Kalyanpur store', time: 'Needs attention' },
-  { level: 'warning', title: 'Maintenance due this week', detail: 'Pump inspection · Rampur East', time: 'Due in 2 days' },
-  { level: 'overdue', title: 'Maintenance is overdue', detail: 'Valve servicing · Chandpur scheme', time: '5 days overdue' },
-];

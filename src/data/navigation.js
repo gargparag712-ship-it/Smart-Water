@@ -7,7 +7,7 @@ export const pageDetails = [
   { label: 'Dashboard', path: '/', icon: Gauge, description: 'Your scheme operations at a glance.' },
   { label: 'Assets', title: 'Asset Management', path: '/assets', icon: Boxes, description: 'Track pumps, motors, pipelines, valves and other scheme assets.' },
   { label: 'Inventory', title: 'Inventory Management', path: '/inventory', icon: Package, description: 'Manage consumables, spare parts and stock levels across your schemes.' },
-  { label: 'Maintenance', path: '/maintenance', icon: Wrench, description: 'Plan routine maintenance and review repair activity.' },
+  { label: 'Maintenance', title: 'Maintenance Management', path: '/maintenance', icon: Wrench, description: 'Plan inspections, coordinate repairs and preserve maintenance history for registered assets.' },
   { label: 'Finance', path: '/finance', icon: CircleDollarSign, description: 'Review scheme income, expenses and financial records.' },
   { label: 'Suppliers', path: '/suppliers', icon: Truck, description: 'Keep supplier details and procurement contacts together.' },
   { label: 'Reports', path: '/reports', icon: ChartNoAxesCombined, description: 'Explore operational summaries and scheme reports.' },

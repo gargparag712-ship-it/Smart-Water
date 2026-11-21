@@ -12,6 +12,6 @@ export default function AlertsPanel({ alerts }) {
         <div className="alert-copy"><strong>{alert.title}</strong><span>{alert.detail}</span><small>{alert.time}</small></div><ArrowRight className="alert-arrow" size={15} />
       </article>;
     })}</div>
-    <div className="sample-note"><span /> Inventory alerts are live · maintenance reminders are illustrative</div>
+    <div className="sample-note"><span /> Inventory and maintenance alerts use local records</div>
   </section>;
 }

@@ -1,5 +1,6 @@
 const { randomUUID } = require('node:crypto');
 const { readCollection, writeCollection } = require('./storage.cjs');
+const { createOperationQueue } = require('./operationQueue.cjs');
 
 const CATEGORIES = new Set([
   'Pump', 'Motor', 'Pipeline', 'Valve', 'Tank', 'Filter', 'Water Meter', 'Other',
@@ -140,13 +141,7 @@ function assertUniqueCode(assets, code, exceptId) {
   if (duplicate) throw new AssetServiceError(`Asset code ${code} is already in use.`);
 }
 
-function createAssetService(dataDirectory) {
-  let operationQueue = Promise.resolve();
-  const serialize = (operation) => {
-    const result = operationQueue.then(operation, operation);
-    operationQueue = result.catch(() => {});
-    return result;
-  };
+function createAssetService(dataDirectory, serialize = createOperationQueue()) {
   const readAssets = async () => validateStoredCollection(await readCollection(dataDirectory, 'assets'));
   const saveAssets = (assets) => writeCollection(dataDirectory, 'assets', assets);
 
@@ -199,6 +194,10 @@ function createAssetService(dataDirectory) {
         const assets = await readAssets();
         const asset = assets.find((record) => record.id === id);
         if (!asset) throw new AssetServiceError('Asset not found. It may have been removed.');
+        const maintenanceRecords = await readCollection(dataDirectory, 'maintenance');
+        if (maintenanceRecords.some((record) => record?.assetId === id)) {
+          throw new AssetServiceError('This asset has maintenance history and cannot be deleted.');
+        }
         await saveAssets(assets.filter((record) => record.id !== id));
         return { id: asset.id, assetCode: asset.assetCode, name: asset.name };
       });
