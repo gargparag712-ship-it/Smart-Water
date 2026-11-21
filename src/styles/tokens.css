@@ -1,0 +1,41 @@
+:root {
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #1b3432;
+  background: #f4f7f6;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --ink: #1b3432;
+  --muted: #81918e;
+  --muted-dark: #60726f;
+  --line: #e7edeb;
+  --surface: #fff;
+  --canvas: #f4f7f6;
+  --teal-950: #102f2e;
+  --teal-900: #153b39;
+  --teal-700: #1d7167;
+  --teal-600: #238c7c;
+  --teal-100: #e6f3ef;
+  --shadow-card: 0 2px 8px rgba(23,53,49,.035), 0 12px 28px rgba(23,53,49,.025);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  min-width: 320px;
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  min-height: 100vh;
+}
+
+button, input {
+  font: inherit;
+}
+
+button {
+  color: inherit;
+}

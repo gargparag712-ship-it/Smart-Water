@@ -1,0 +1,93 @@
+.inventory-page { display: grid; gap: 14px; min-width: 0; }
+.inventory-intro { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.inventory-intro > div:first-child p { margin: 0 0 7px; color: #768985; font-size: 11px; }
+.inventory-intro > div:first-child > span { display: inline-flex; align-items: center; gap: 5px; color: #508d7d; font-size: 9px; }
+.inventory-actions { display: flex; flex-wrap: wrap; gap: 7px; }
+.inventory-actions button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; white-space: nowrap; }
+.inventory-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.inventory-stat { display: flex; min-width: 0; align-items: center; gap: 10px; padding: 14px; border: 1px solid #e8eeeb; border-radius: 9px; background: #fff; box-shadow: 0 2px 8px #1b4c3c06; }
+.inventory-stat-icon { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; border-radius: 9px; color: #218b78; background: #edf7f4; }
+.inventory-stat > span:nth-child(2) { display: grid; min-width: 0; gap: 4px; }
+.inventory-stat small { overflow: hidden; color: #788984; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.inventory-stat strong { color: #21433c; font-size: 20px; font-weight: 690; line-height: 1; }
+.inventory-stat > i { margin-left: auto; color: #6f9d90; font-size: 7px; font-style: normal; font-weight: 760; letter-spacing: .5px; }
+.inventory-stat.tone-amber .inventory-stat-icon { color: #b88330; background: #fff7e8; }
+.inventory-stat.tone-rose .inventory-stat-icon { color: #bf6558; background: #fff0ed; }
+.inventory-stat.tone-blue .inventory-stat-icon { color: #557fab; background: #eff5fc; }
+.inventory-register, .inventory-history { min-width: 0; overflow: hidden; padding: 0; }
+.inventory-section-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; padding: 17px 19px 13px; }
+.inventory-section-heading h2 { margin: 5px 0 3px; color: #294941; font-size: 15px; font-weight: 690; letter-spacing: -.2px; }
+.inventory-section-heading p { margin: 0; color: #83928e; font-size: 9px; }
+.inventory-toolbar { display: flex; align-items: center; gap: 8px; padding: 12px 19px; border-top: 1px solid #edf1ef; border-bottom: 1px solid #edf1ef; background: #fbfcfb; }
+.inventory-toolbar select, .transaction-filters select, .transaction-filters input { height: 32px; padding: 0 9px; border: 1px solid #e3eae7; border-radius: 6px; outline: none; color: #4b625c; background: #fff; font: inherit; font-size: 9px; }
+.inventory-search { display: flex; height: 32px; min-width: 160px; flex: 1; align-items: center; gap: 7px; padding: 0 9px; border: 1px solid #e3eae7; border-radius: 6px; color: #91a19b; background: #fff; }
+.inventory-search:focus-within { border-color: #79b6a6; box-shadow: 0 0 0 2px #198b7812; }
+.inventory-search input { width: 100%; min-width: 0; border: 0; outline: 0; color: #344e47; background: transparent; font: inherit; font-size: 9px; }
+.inventory-result-count { margin-left: auto; color: #879690; font-size: 9px; white-space: nowrap; }
+.inventory-table { min-width: 780px; }
+.inventory-table th:nth-child(4), .inventory-table th:nth-child(5), .inventory-table td:nth-child(4), .inventory-table td:nth-child(5) { white-space: nowrap; }
+.inventory-status { display: inline-flex; align-items: center; gap: 5px; padding: 5px 7px; border-radius: 5px; font-size: 8px; font-weight: 650; white-space: nowrap; }
+.inventory-status i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+.inventory-status.good { color: #428673; background: #edf7f3; }
+.inventory-status.low { color: #ad7827; background: #fff6e7; }
+.inventory-status.out { color: #b4554a; background: #fff0ed; }
+.inventory-history { padding-bottom: 2px; }
+.transaction-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; padding: 12px 19px; border-top: 1px solid #edf1ef; border-bottom: 1px solid #edf1ef; background: #fbfcfb; }
+.transaction-filters label { display: flex; align-items: center; gap: 5px; color: #84938e; font-size: 9px; }
+.transaction-filters .button-secondary { height: 32px; padding: 0 10px; font-size: 9px; }
+.history-empty { display: flex; min-height: 75px; align-items: center; justify-content: center; gap: 7px; color: #84938e; font-size: 10px; }
+.history-empty button { border: 0; color: #278a78; background: transparent; cursor: pointer; font: inherit; }
+.transaction-table { min-width: 680px; }
+.transaction-table td { vertical-align: middle; }
+.transaction-table td > strong { display: block; color: #3c554e; font-weight: 640; }
+.tx-item-code { display: block; margin-top: 3px; color: #8b9994; font-size: 8px; }
+.movement-type { display: inline-flex; padding: 5px 7px; border-radius: 5px; font-size: 8px; font-weight: 650; }
+.movement-type.in { color: #3d846f; background: #edf7f3; }
+.movement-type.out { color: #a16f28; background: #fff6e7; }
+.history-limit { margin: 0; padding: 8px 18px; color: #8c9994; font-size: 9px; }
+.inventory-dialog { width: min(650px, calc(100vw - 32px)); }
+.inventory-form-scroll { max-height: min(62vh, 540px); overflow: auto; padding: 0 19px 18px; }
+.inventory-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px 14px; }
+.inventory-field { display: grid; min-width: 0; gap: 5px; color: #526862; font-size: 9px; font-weight: 630; }
+.inventory-field input, .inventory-field select, .inventory-field textarea { width: 100%; min-width: 0; min-height: 34px; box-sizing: border-box; padding: 8px 9px; border: 1px solid #e1e9e5; border-radius: 6px; outline: 0; color: #334e46; background: #fff; font: inherit; font-size: 10px; font-weight: 430; }
+.inventory-field textarea { resize: vertical; }
+.inventory-field input[readonly] { color: #748780; background: #f5f8f6; }
+.inventory-field input:focus, .inventory-field select:focus, .inventory-field textarea:focus { border-color: #79b6a6; box-shadow: 0 0 0 2px #198b7812; }
+.inventory-field.has-error input, .inventory-field.has-error select { border-color: #d88378; }
+.inventory-field small { color: #bb5e53; font-size: 8px; font-weight: 450; }
+.inventory-field.full-width { grid-column: 1 / -1; }
+.inventory-note { margin: 12px 0 0; color: #9a762f; font-size: 9px; }
+.inventory-detail-stock { margin: 0 19px 15px; padding: 14px; border: 1px solid #e8eeeb; border-radius: 8px; background: #f9fbfa; }
+.inventory-detail-stock > strong { display: block; color: #21483e; font-size: 25px; }
+.inventory-detail-stock > strong small { color: #748780; font-size: 11px; font-weight: 500; }
+.inventory-detail-stock > span { display: inline-flex; margin-top: 6px; }
+.inventory-detail-stock p { margin: 8px 0 0; color: #83918c; font-size: 9px; }
+.inventory-detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px 16px; margin: 0; padding: 0 19px 18px; }
+.inventory-detail-grid > div { min-width: 0; }
+.inventory-detail-grid dt { margin-bottom: 4px; color: #86948f; font-size: 8px; }
+.inventory-detail-grid dd { overflow-wrap: anywhere; margin: 0; color: #3d554e; font-size: 10px; }
+.movement-preview { display: grid; grid-template-columns: 1fr auto 1fr auto; align-items: center; gap: 9px; margin-top: 14px; padding: 11px; border: 1px solid #e7eeea; border-radius: 7px; background: #f8fbf9; }
+.movement-preview span { color: #84948d; font-size: 9px; }
+.movement-preview strong { color: #31564a; font-size: 10px; }
+.asset-feedback.success { display: flex; align-items: center; gap: 8px; }
+.asset-feedback.success > button { margin-left: auto; }
+.nav-count { min-width: 18px; }
+@media (max-width: 1000px) {
+  .inventory-stat { padding: 11px 9px; gap: 7px; }
+  .inventory-stat > i { display: none; }
+  .inventory-toolbar { flex-wrap: wrap; }
+  .inventory-search { flex-basis: 100%; }
+}
+@media (max-width: 700px) {
+  .inventory-intro { align-items: flex-start; flex-direction: column; }
+  .inventory-actions { width: 100%; }
+  .inventory-actions button { flex: 1; }
+  .inventory-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .inventory-section-heading { padding-right: 13px; padding-left: 13px; }
+  .inventory-toolbar, .transaction-filters { padding-right: 12px; padding-left: 12px; }
+  .inventory-toolbar select { flex: 1; }
+  .inventory-result-count { width: 100%; }
+  .inventory-form-grid, .inventory-detail-grid { grid-template-columns: 1fr; }
+  .inventory-field.full-width { grid-column: auto; }
+  .movement-preview { grid-template-columns: 1fr auto; }
+}
