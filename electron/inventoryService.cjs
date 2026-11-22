@@ -1,5 +1,6 @@
 const { randomUUID } = require('node:crypto');
 const { readCollection, writeCollection } = require('./storage.cjs');
+const { createOperationQueue } = require('./operationQueue.cjs');
 
 const CATEGORIES = new Set(['Chemicals', 'Spare Parts', 'Electrical Supplies', 'Plumbing Materials', 'Filters and Components', 'Tools', 'Other']);
 const TEXT_LIMITS = Object.freeze({ itemCode: 40, name: 120, unit: 30, location: 160, supplier: 120, description: 2000 });
@@ -33,13 +34,15 @@ function validDate(value) {
 function normalizeItem(input) {
   if (!isRecord(input)) throw new InventoryServiceError('Enter item information before saving.');
   for (const key of ['id', 'createdAt', 'updatedAt']) if (Object.hasOwn(input, key)) throw new InventoryServiceError(`${key} is assigned by SmartWater and cannot be changed here.`);
-  const allowed = new Set([...FIELDS, 'category', 'currentStock', 'minimumStock']);
+  const allowed = new Set([...FIELDS, 'category', 'currentStock', 'minimumStock', 'supplierId']);
   for (const key of Object.keys(input)) if (!allowed.has(key)) throw new InventoryServiceError(`Unsupported inventory field: ${key}.`);
   const item = {};
   for (const field of FIELDS) item[field] = cleanText(field, input[field]);
   item.category = input.category ?? '';
   item.currentStock = quantity(input.currentStock ?? 0, 'Current stock');
   item.minimumStock = quantity(input.minimumStock ?? 0, 'Minimum stock');
+  item.supplierId = input.supplierId ?? '';
+  if (typeof item.supplierId !== 'string' || (item.supplierId && !/^[0-9a-f-]{36}$/i.test(item.supplierId))) throw new InventoryServiceError('Choose a valid supplier record.');
   if (!item.itemCode) throw new InventoryServiceError('Item code is required.');
   if (!/^[A-Z0-9][A-Z0-9._/-]{0,39}$/.test(item.itemCode)) throw new InventoryServiceError('Item code may use letters, numbers, dots, underscores, hyphens and slashes.');
   if (!item.name) throw new InventoryServiceError('Item name is required.');
@@ -79,11 +82,16 @@ function normalizeTransactionFilters(filters = {}) {
   return filters;
 }
 
-function createInventoryService(directory) {
-  let queue = Promise.resolve();
-  const serialize = (fn) => { const result = queue.then(fn, fn); queue = result.catch(() => {}); return result; };
+function createInventoryService(directory, serialize = createOperationQueue()) {
   const readItems = async () => normalizeStoredItems(await readCollection(directory, 'inventory'));
   const readTransactions = async () => normalizeTransactions(await readCollection(directory, 'inventoryTransactions'));
+  const resolveSupplier = async (item) => {
+    if (!item.supplierId) return item;
+    const suppliers = await readCollection(directory, 'suppliers');
+    if (!suppliers.some((supplier) => supplier?.id === item.supplierId)) throw new InventoryServiceError('The selected supplier does not exist. Refresh the supplier list and try again.');
+    const supplier = suppliers.find((entry) => entry.id === item.supplierId);
+    return { ...item, supplier: supplier.name };
+  };
   const savePair = async (items, transactions, oldItems, oldTransactions) => {
     await writeCollection(directory, 'inventory', items);
     try { await writeCollection(directory, 'inventoryTransactions', transactions); }
@@ -92,8 +100,8 @@ function createInventoryService(directory) {
   return {
     listItems() { return serialize(async () => (await readItems()).sort((a, b) => a.itemCode.localeCompare(b.itemCode))); },
     getItem(id) { return serialize(async () => { const item = (await readItems()).find((entry) => entry.id === id); if (!item) throw new InventoryServiceError('Inventory item not found.'); return item; }); },
-    createItem(input) { return serialize(async () => { const items = await readItems(); const item = normalizeItem(input); if (items.some((entry) => entry.itemCode === item.itemCode)) throw new InventoryServiceError(`Item code ${item.itemCode} is already in use.`); const now = new Date().toISOString(); const created = { ...item, id: randomUUID(), createdAt: now, updatedAt: now }; await writeCollection(directory, 'inventory', [...items, created]); return created; }); },
-    updateItem(id, input) { return serialize(async () => { const items = await readItems(); const index = items.findIndex((entry) => entry.id === id); if (index < 0) throw new InventoryServiceError('Inventory item not found.'); const item = normalizeItem(input); if (items.some((entry) => entry.id !== id && entry.itemCode === item.itemCode)) throw new InventoryServiceError(`Item code ${item.itemCode} is already in use.`); if (item.currentStock !== items[index].currentStock) throw new InventoryServiceError('Use Stock In or Stock Out to change available quantity.'); const updated = { ...item, id, createdAt: items[index].createdAt, updatedAt: new Date(Math.max(Date.now(), Date.parse(items[index].updatedAt) + 1)).toISOString() }; const next = [...items]; next[index] = updated; await writeCollection(directory, 'inventory', next); return updated; }); },
+    createItem(input) { return serialize(async () => { const items = await readItems(); const item = await resolveSupplier(normalizeItem(input)); if (items.some((entry) => entry.itemCode === item.itemCode)) throw new InventoryServiceError(`Item code ${item.itemCode} is already in use.`); const now = new Date().toISOString(); const created = { ...item, id: randomUUID(), createdAt: now, updatedAt: now }; await writeCollection(directory, 'inventory', [...items, created]); return created; }); },
+    updateItem(id, input) { return serialize(async () => { const items = await readItems(); const index = items.findIndex((entry) => entry.id === id); if (index < 0) throw new InventoryServiceError('Inventory item not found.'); const item = await resolveSupplier(normalizeItem(input)); if (items.some((entry) => entry.id !== id && entry.itemCode === item.itemCode)) throw new InventoryServiceError(`Item code ${item.itemCode} is already in use.`); if (item.currentStock !== items[index].currentStock) throw new InventoryServiceError('Use Stock In or Stock Out to change available quantity.'); const updated = { ...item, id, createdAt: items[index].createdAt, updatedAt: new Date(Math.max(Date.now(), Date.parse(items[index].updatedAt) + 1)).toISOString() }; const next = [...items]; next[index] = updated; await writeCollection(directory, 'inventory', next); return updated; }); },
     deleteItem(id) { return serialize(async () => { const items = await readItems(); const transactions = await readTransactions(); const item = items.find((entry) => entry.id === id); if (!item) throw new InventoryServiceError('Inventory item not found.'); if (transactions.some((tx) => tx.itemId === id)) throw new InventoryServiceError('This item has stock transaction history and cannot be deleted.'); await writeCollection(directory, 'inventory', items.filter((entry) => entry.id !== id)); return { id, itemCode: item.itemCode, name: item.name }; }); },
     listTransactions(filters = {}) { return serialize(async () => { const selected = normalizeTransactionFilters(filters); const transactions = await readTransactions(); return transactions.filter((tx) => (!selected.itemId || tx.itemId === selected.itemId) && (!selected.transactionType || tx.transactionType === selected.transactionType) && (!selected.fromDate || tx.date >= selected.fromDate) && (!selected.toDate || tx.date <= selected.toDate)).sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt)); }); },
     stockIn(input) { return this.applyMovement(input, 'IN'); },

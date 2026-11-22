@@ -35,4 +35,11 @@ contextBridge.exposeInMainWorld('smartWater', {
   updateBudget: (id, budget) => ipcRenderer.invoke('finance:budgets:update', id, budget),
   deleteBudget: (id) => ipcRenderer.invoke('finance:budgets:delete', id),
   listFinanceMaintenanceOrders: () => ipcRenderer.invoke('finance:maintenance-orders'),
+  listSuppliers: () => ipcRenderer.invoke('suppliers:list'),
+  getSupplier: (id) => ipcRenderer.invoke('suppliers:get', id),
+  createSupplier: (supplier) => ipcRenderer.invoke('suppliers:create', supplier),
+  updateSupplier: (id, supplier) => ipcRenderer.invoke('suppliers:update', id, supplier),
+  deleteSupplier: (id) => ipcRenderer.invoke('suppliers:delete', id),
+  getReportData: (type, filters) => ipcRenderer.invoke('reports:data', type, filters),
+  exportReportPdf: (type, filters) => ipcRenderer.invoke('reports:export-pdf', type, filters),
 });

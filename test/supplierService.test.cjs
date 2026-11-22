@@ -1,0 +1,16 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs/promises');
+const os = require('node:os');
+const path = require('node:path');
+const { afterEach, beforeEach, test } = require('node:test');
+const { ensureStorage, readCollection } = require('../electron/storage.cjs');
+const { createSupplierService } = require('../electron/supplierService.cjs');
+const { createInventoryService } = require('../electron/inventoryService.cjs');
+const { createOperationQueue } = require('../electron/operationQueue.cjs');
+let directory, suppliers, inventory;
+const details = { name: 'Aqua Supply', contactPerson: 'Anita Rao', phone: '+91 98765 43210', email: 'sales@example.in', address: 'Pune', suppliedCategories: ['Chemicals'], notes: '' };
+beforeEach(async()=>{directory=await fs.mkdtemp(path.join(os.tmpdir(),'smartwater-suppliers-'));await ensureStorage(directory);const queue=createOperationQueue();suppliers=createSupplierService(directory,queue);inventory=createInventoryService(directory,queue);});
+afterEach(async()=>fs.rm(directory,{recursive:true,force:true}));
+test('creates unique supplier codes and persists supplier details',async()=>{const [a,b]=await Promise.all([suppliers.createSupplier(details),suppliers.createSupplier({...details,name:'Clear Flow'})]);assert.notEqual(a.supplierCode,b.supplierCode);assert.match(a.supplierCode,/^SUP-\d{8}-\d{4}$/);assert.equal((await suppliers.listSuppliers()).length,2);assert.equal((await readCollection(directory,'suppliers')).length,2);});
+test('validates required fields, contact information and renderer-owned supplier codes',async()=>{await assert.rejects(suppliers.createSupplier({...details,name:' '}),/name is required/);await assert.rejects(suppliers.createSupplier({...details,email:'bad'}),/valid email/);await assert.rejects(suppliers.createSupplier({...details,phone:'abc12345'}),/valid phone/);await assert.rejects(suppliers.createSupplier({...details,phone:'-------'}),/valid phone/);await assert.rejects(suppliers.createSupplier({...details,suppliedCategories:['Invalid']}),/valid supplied categories/);await assert.rejects(suppliers.createSupplier({...details,supplierCode:'SUP-DUPLICATE'}),/Unsupported supplier field/);});
+test('updates supplier while preserving code and blocks deletion while inventory is linked',async()=>{const supplier=await suppliers.createSupplier(details);const updated=await suppliers.updateSupplier(supplier.id,{...details,name:'Aqua Supply Co'});assert.equal(updated.supplierCode,supplier.supplierCode);const item=await inventory.createItem({itemCode:'CHL-1',name:'Chlorine',category:'Chemicals',unit:'kg',currentStock:4,minimumStock:1,supplierId:supplier.id});assert.equal(item.supplier,updated.name);assert.equal((await suppliers.getSupplier(supplier.id)).inventoryItemCount,1);await assert.rejects(suppliers.deleteSupplier(supplier.id),/linked to inventory/);assert.equal((await inventory.getItem(item.id)).supplierId,supplier.id);await inventory.updateItem(item.id,{itemCode:'CHL-1',name:'Chlorine',category:'Chemicals',unit:'kg',currentStock:4,minimumStock:1,supplierId:''});await suppliers.deleteSupplier(supplier.id);assert.equal((await suppliers.listSuppliers()).length,0);});

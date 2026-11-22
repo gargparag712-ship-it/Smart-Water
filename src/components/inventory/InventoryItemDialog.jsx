@@ -3,7 +3,7 @@ import { X } from 'lucide-react';
 import { inventoryCategories, inventoryUnits } from '../../data/inventoryOptions.js';
 
 const blank = { itemCode: '', name: '', category: '', unit: 'piece', currentStock: '0', minimumStock: '0', location: '', supplier: '', description: '' };
-export default function InventoryItemDialog({ item, items, busy, error, onClose, onSave }) {
+export default function InventoryItemDialog({ item, items, suppliers = [], busy, error, onClose, onSave }) {
   const [form, setForm] = useState(() => item ? { ...item, currentStock: String(item.currentStock), minimumStock: String(item.minimumStock) } : blank);
   const [issues, setIssues] = useState({});
   function change(event) { const { name, value } = event.target; setForm((prev) => ({ ...prev, [name]: value })); setIssues((prev) => ({ ...prev, [name]: '' })); }
@@ -17,7 +17,9 @@ export default function InventoryItemDialog({ item, items, busy, error, onClose,
     for (const field of ['currentStock', 'minimumStock']) if (form[field] === '' || !Number.isFinite(Number(form[field])) || Number(form[field]) < 0) next[field] = 'Enter a valid zero or positive amount.';
     if (!form.unit.trim()) next.unit = 'Unit is required.';
     setIssues(next); if (Object.keys(next).length) return;
-    onSave({ ...form, itemCode: form.itemCode.trim(), name: form.name.trim(), currentStock: Number(form.currentStock), minimumStock: Number(form.minimumStock) });
+    const fields = { ...form, itemCode: form.itemCode.trim(), name: form.name.trim(), currentStock: Number(form.currentStock), minimumStock: Number(form.minimumStock) };
+    delete fields.id; delete fields.createdAt; delete fields.updatedAt;
+    onSave(fields);
   }
   const textField = (name, label, props = {}) => <label className={`inventory-field${issues[name] ? ' has-error' : ''}`}><span>{label}</span><input name={name} value={form[name] ?? ''} onChange={change} {...props} />{issues[name] && <small>{issues[name]}</small>}</label>;
   const selectField = (name, label, values) => <label className={`inventory-field${issues[name] ? ' has-error' : ''}`}><span>{label}</span><select name={name} value={form[name]} onChange={change}><option value="">Select {label.toLowerCase()}</option>{values.map((value) => <option key={value}>{value}</option>)}</select>{issues[name] && <small>{issues[name]}</small>}</label>;
@@ -27,7 +29,7 @@ export default function InventoryItemDialog({ item, items, busy, error, onClose,
       {textField('itemCode', 'Item code *', { maxLength: 40, placeholder: 'e.g. CHL-001' })}{textField('name', 'Item name *', { maxLength: 120, placeholder: 'e.g. Chlorine tablets' })}
       {selectField('category', 'Category *', inventoryCategories)}<label className={`inventory-field${issues.unit ? ' has-error' : ''}`}><span>Unit *</span><input name="unit" list="inventory-unit-options" value={form.unit} onChange={change} maxLength={30} placeholder="e.g. packet" /><datalist id="inventory-unit-options">{inventoryUnits.map((value) => <option value={value} key={value} />)}</datalist>{issues.unit && <small>{issues.unit}</small>}</label>
       {textField('currentStock', 'Current stock', { type: 'number', min: 0, step: 'any', readOnly: Boolean(item), title: item ? 'Use Stock In or Stock Out to change quantity' : undefined })}{textField('minimumStock', 'Minimum stock threshold', { type: 'number', min: 0, step: 'any' })}
-      {textField('location', 'Storage location', { maxLength: 160, placeholder: 'e.g. Main store' })}{textField('supplier', 'Supplier', { maxLength: 120, placeholder: 'Optional' })}
+      {textField('location', 'Storage location', { maxLength: 160, placeholder: 'e.g. Main store' })}<label className="inventory-field"><span>Supplier record</span><select name="supplierId" value={form.supplierId || ''} onChange={(event) => { const selected = suppliers.find((supplier) => supplier.id === event.target.value); setForm((prev) => ({ ...prev, supplierId: event.target.value, supplier: selected?.name || prev.supplier || '' })); }}><option value="">No linked supplier</option>{suppliers.map((supplier) => <option key={supplier.id} value={supplier.id}>{supplier.supplierCode} · {supplier.name}</option>)}</select></label>{textField('supplier', 'Supplier name (legacy / other)', { maxLength: 120, placeholder: 'Optional' })}
       <label className="inventory-field full-width"><span>Description</span><textarea name="description" value={form.description} onChange={change} maxLength={2000} rows={3} /></label>
     </div>{item && <p className="inventory-note">For accurate stock history, use Stock In or Stock Out to adjust quantity.</p>}</div><footer className="dialog-footer"><span className="dialog-footnote">Item ID and timestamps are assigned automatically.</span><div><button className="button-secondary" type="button" onClick={onClose} disabled={busy}>Cancel</button><button className="button-primary" type="submit" disabled={busy}>{busy ? 'Saving…' : item ? 'Save changes' : 'Add item'}</button></div></footer></form>
   </section></div>;

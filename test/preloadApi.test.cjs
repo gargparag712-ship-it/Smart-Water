@@ -2,7 +2,7 @@ const assert = require('node:assert/strict');
 const Module = require('node:module');
 const { test } = require('node:test');
 
-test('preload exposes only health plus scoped asset, inventory, maintenance and finance IPC functions', async () => {
+test('preload exposes only scoped application IPC functions', async () => {
   const preloadPath = require.resolve('../electron/preload.cjs');
   const originalLoad = Module._load;
   const calls = [];
@@ -35,12 +35,12 @@ test('preload exposes only health plus scoped asset, inventory, maintenance and 
 
   assert.equal(exposedName, 'smartWater');
   assert.deepEqual(Object.keys(exposedApi).sort(), [
-    'checkHealth', 'createAsset', 'createBudget', 'createFinancialTransaction', 'createInventoryItem', 'createMaintenanceRecord',
-    'deleteAsset', 'deleteBudget', 'deleteFinancialTransaction', 'deleteInventoryItem', 'getAsset', 'getFinanceSummary',
-    'getFinancialTransaction', 'getInventoryItem', 'getMaintenanceRecord', 'getMaintenanceSummary', 'listAssetMaintenanceHistory',
+    'checkHealth', 'createAsset', 'createBudget', 'createFinancialTransaction', 'createInventoryItem', 'createMaintenanceRecord', 'createSupplier',
+    'deleteAsset', 'deleteBudget', 'deleteFinancialTransaction', 'deleteInventoryItem', 'deleteSupplier', 'exportReportPdf',
+    'getAsset', 'getFinanceSummary', 'getFinancialTransaction', 'getInventoryItem', 'getMaintenanceRecord', 'getMaintenanceSummary', 'getReportData', 'getSupplier', 'listAssetMaintenanceHistory',
     'listAssets', 'listBudgets', 'listFinanceMaintenanceOrders', 'listFinancialTransactions', 'listInventoryItems', 'listInventoryTransactions',
-    'listMaintenanceAssets', 'listMaintenanceRecords', 'stockIn', 'stockOut', 'updateAsset', 'updateBudget',
-    'updateFinancialTransaction', 'updateInventoryItem', 'updateMaintenanceRecord', 'updateMaintenanceStatus',
+    'listMaintenanceAssets', 'listMaintenanceRecords', 'listSuppliers', 'stockIn', 'stockOut', 'updateAsset', 'updateBudget',
+    'updateFinancialTransaction', 'updateInventoryItem', 'updateMaintenanceRecord', 'updateMaintenanceStatus', 'updateSupplier',
   ]);
   await exposedApi.checkHealth();
   await exposedApi.listAssets();
@@ -75,6 +75,13 @@ test('preload exposes only health plus scoped asset, inventory, maintenance and 
   await exposedApi.updateBudget('budget-id', { category: 'Electricity' });
   await exposedApi.deleteBudget('budget-id');
   await exposedApi.listFinanceMaintenanceOrders();
+  await exposedApi.listSuppliers();
+  await exposedApi.getSupplier('supplier-id');
+  await exposedApi.createSupplier({ name: 'Water Works' });
+  await exposedApi.updateSupplier('supplier-id', { name: 'Water Works 2' });
+  await exposedApi.deleteSupplier('supplier-id');
+  await exposedApi.getReportData('finance', { fromDate: '2026-01-01' });
+  await exposedApi.exportReportPdf('finance', {});
   assert.deepEqual(calls, [
     ['app:health-check'],
     ['assets:list'],
@@ -109,5 +116,12 @@ test('preload exposes only health plus scoped asset, inventory, maintenance and 
     ['finance:budgets:update', 'budget-id', { category: 'Electricity' }],
     ['finance:budgets:delete', 'budget-id'],
     ['finance:maintenance-orders'],
+    ['suppliers:list'],
+    ['suppliers:get', 'supplier-id'],
+    ['suppliers:create', { name: 'Water Works' }],
+    ['suppliers:update', 'supplier-id', { name: 'Water Works 2' }],
+    ['suppliers:delete', 'supplier-id'],
+    ['reports:data', 'finance', { fromDate: '2026-01-01' }],
+    ['reports:export-pdf', 'finance', {}],
   ]);
 });

@@ -1,4 +1,6 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, dialog, ipcMain } = require('electron');
+const fs = require('node:fs/promises');
+const os = require('node:os');
 const path = require('node:path');
 const { ensureStorage } = require('./storage.cjs');
 const { AssetServiceError, createAssetService } = require('./assetsService.cjs');
@@ -6,12 +8,17 @@ const { InventoryServiceError, createInventoryService } = require('./inventorySe
 const { MaintenanceServiceError, createMaintenanceService } = require('./maintenanceService.cjs');
 const { FinanceServiceError, createFinanceService } = require('./financeService.cjs');
 const { createOperationQueue } = require('./operationQueue.cjs');
+const { SupplierServiceError, createSupplierService } = require('./supplierService.cjs');
+const { ReportsServiceError, getReportData } = require('./reportsService.cjs');
+const { buildPdfHtml } = require('./pdfReport.cjs');
 
 let storageReady = false;
 let assetService;
 let inventoryService;
 let maintenanceService;
 let financeService;
+let supplierService;
+let dataDirectoryPath;
 const relatedDataQueue = createOperationQueue();
 
 function createWindow() {
@@ -163,18 +170,88 @@ function registerFinanceHandlers() {
   }
 }
 
+function registerSupplierHandlers() {
+  const handlers = {
+    'suppliers:list': () => supplierService.listSuppliers(),
+    'suppliers:get': (id) => supplierService.getSupplier(id),
+    'suppliers:create': (supplier) => supplierService.createSupplier(supplier),
+    'suppliers:update': (id, supplier) => supplierService.updateSupplier(id, supplier),
+    'suppliers:delete': (id) => supplierService.deleteSupplier(id),
+  };
+  for (const [channel, operation] of Object.entries(handlers)) {
+    ipcMain.handle(channel, async (_event, ...args) => {
+      try {
+        if (!storageReady || !supplierService) throw new Error('Storage is not ready.');
+        return { ok: true, data: await operation(...args) };
+      } catch (error) {
+        if (!(error instanceof SupplierServiceError)) console.error(`SmartWater supplier operation failed (${channel}):`, error);
+        const message = error instanceof SupplierServiceError ? error.message : error instanceof SyntaxError ? 'A supplier data file is malformed. No changes were saved.' : 'SmartWater could not read or save suppliers. Please try again.';
+        return { ok: false, error: message };
+      }
+    });
+  }
+}
+
+function registerReportHandlers() {
+  ipcMain.handle('reports:data', async (_event, type, filters) => {
+    try {
+      if (!storageReady || !dataDirectoryPath) throw new Error('Storage is not ready.');
+      return { ok: true, data: await getReportData(dataDirectoryPath, type, filters) };
+    } catch (error) {
+      if (!(error instanceof ReportsServiceError)) console.error('SmartWater report data failed:', error);
+      const message = error instanceof ReportsServiceError ? error.message : error instanceof SyntaxError ? 'A report data file is malformed.' : 'SmartWater could not prepare this report.';
+      return { ok: false, error: message };
+    }
+  });
+  ipcMain.handle('reports:export-pdf', async (_event, type, filters) => {
+    let printWindow;
+    let temporaryDirectory;
+    try {
+      if (!storageReady || !dataDirectoryPath) throw new Error('Storage is not ready.');
+      const report = await getReportData(dataDirectoryPath, type, filters);
+      const safeTitle = report.title.replace(/[^A-Za-z0-9 -]/g, '').trim().replaceAll(' ', '-') || 'SmartWater-Report';
+      const saveResult = await dialog.showSaveDialog(BrowserWindow.getFocusedWindow() ?? undefined, {
+        title: `Export ${report.title} as PDF`,
+        defaultPath: path.join(app.getPath('documents'), `${safeTitle}-${report.generatedAt.slice(0, 10)}.pdf`),
+        filters: [{ name: 'PDF document', extensions: ['pdf'] }],
+      });
+      if (saveResult.canceled || !saveResult.filePath) return { ok: true, cancelled: true };
+
+      temporaryDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'smartwater-report-'));
+      const htmlPath = path.join(temporaryDirectory, 'report.html');
+      await fs.writeFile(htmlPath, buildPdfHtml(report), 'utf8');
+      printWindow = new BrowserWindow({ show: false, width: 1100, height: 800, webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true } });
+      await printWindow.loadFile(htmlPath);
+      const pdf = await printWindow.webContents.printToPDF({ printBackground: true, pageSize: 'A4', landscape: true, marginsType: 0 });
+      await fs.writeFile(saveResult.filePath, pdf);
+      return { ok: true, data: { fileName: path.basename(saveResult.filePath) } };
+    } catch (error) {
+      if (!(error instanceof ReportsServiceError)) console.error('SmartWater PDF export failed:', error);
+      const message = error instanceof ReportsServiceError ? error.message : error instanceof SyntaxError ? 'A report data file is malformed.' : 'SmartWater could not create the PDF. Choose another location and try again.';
+      return { ok: false, error: message };
+    } finally {
+      if (printWindow && !printWindow.isDestroyed()) printWindow.close();
+      if (temporaryDirectory) await fs.rm(temporaryDirectory, { recursive: true, force: true }).catch(() => {});
+    }
+  });
+}
+
 app.whenReady().then(async () => {
   try {
     const dataDirectory = path.join(app.getPath('userData'), 'data');
+    dataDirectoryPath = dataDirectory;
     await ensureStorage(dataDirectory);
     assetService = createAssetService(dataDirectory, relatedDataQueue);
-    inventoryService = createInventoryService(dataDirectory);
+    inventoryService = createInventoryService(dataDirectory, relatedDataQueue);
     maintenanceService = createMaintenanceService(dataDirectory, relatedDataQueue);
     financeService = createFinanceService(dataDirectory, relatedDataQueue);
+    supplierService = createSupplierService(dataDirectory, relatedDataQueue);
     registerAssetHandlers();
     registerInventoryHandlers();
     registerMaintenanceHandlers();
     registerFinanceHandlers();
+    registerSupplierHandlers();
+    registerReportHandlers();
     storageReady = true;
     createWindow();
   } catch (error) {
