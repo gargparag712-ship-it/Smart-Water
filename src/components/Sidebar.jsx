@@ -1,4 +1,4 @@
-import { Droplets, LifeBuoy } from 'lucide-react';
+import { Archive, Droplets } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { primaryNavigation, secondaryNavigation } from '../data/navigation.js';
 import ConnectionStatus from './ConnectionStatus.jsx';
@@ -37,9 +37,9 @@ export default function Sidebar() {
       <div className="nav-caption nav-caption-secondary">PREFERENCES</div>
       <NavigationGroup items={secondaryNavigation} lowStockCount={lowStockCount} maintenanceCount={maintenanceCount} />
       <div className="sidebar-spacer" />
-      <div className="support-card"><span className="support-icon"><LifeBuoy size={17} /></span><div><strong>Need a hand?</strong><span>Visit the help centre</span></div><span className="support-arrow">↗</span></div>
+      <NavLink className="support-card" to="/settings"><span className="support-icon"><Archive size={17} /></span><div><strong>Protect your data</strong><span>Back up local records</span></div><span className="support-arrow">↗</span></NavLink>
       <ConnectionStatus />
-      <div className="sidebar-version">SMARTWATER <span>·</span> PHASE 6</div>
+      <div className="sidebar-version">SMARTWATER <span>·</span> LOCAL WORKSPACE</div>
     </aside>
   );
 }

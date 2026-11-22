@@ -74,4 +74,4 @@ function createSupplierService(directory, serialize = createOperationQueue()) {
   };
 }
 
-module.exports = { SupplierServiceError, SUPPLIED_CATEGORIES: [...CATEGORIES], createSupplierService };
+module.exports = { SupplierServiceError, SUPPLIED_CATEGORIES: [...CATEGORIES], validateStoredSuppliers, createSupplierService };

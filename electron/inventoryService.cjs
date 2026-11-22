@@ -126,4 +126,4 @@ function createInventoryService(directory, serialize = createOperationQueue()) {
   };
 }
 
-module.exports = { InventoryServiceError, CATEGORIES: [...CATEGORIES], createInventoryService };
+module.exports = { InventoryServiceError, CATEGORIES: [...CATEGORIES], normalizeStoredItems, normalizeTransactions, createInventoryService };

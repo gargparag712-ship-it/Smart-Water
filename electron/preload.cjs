@@ -42,4 +42,6 @@ contextBridge.exposeInMainWorld('smartWater', {
   deleteSupplier: (id) => ipcRenderer.invoke('suppliers:delete', id),
   getReportData: (type, filters) => ipcRenderer.invoke('reports:data', type, filters),
   exportReportPdf: (type, filters) => ipcRenderer.invoke('reports:export-pdf', type, filters),
+  exportBackup: () => ipcRenderer.invoke('backup:export'),
+  restoreBackup: () => ipcRenderer.invoke('backup:restore'),
 });

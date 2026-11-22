@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertCircle, CalendarDays, Download, FileBarChart2, RefreshCw } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { assetCategories } from '../data/assetOptions.js';
+import { assetCategories, assetStatuses } from '../data/assetOptions.js';
 import { inventoryCategories } from '../data/inventoryOptions.js';
+import { expenseCategories, incomeCategories } from '../data/financeOptions.js';
 import '../styles/reports.css';
 
 const types = [ ['assets','Asset Report'], ['inventory','Inventory Report'], ['stockMovements','Stock Movement Report'], ['maintenance','Maintenance Report'], ['finance','Finance Report'], ['monthlySummary','Monthly Operational Summary'] ];
@@ -14,8 +15,8 @@ export default function ReportsPage() {
  const [type,setType]=useState('monthlySummary'); const [filters,setFilters]=useState({fromDate:'',toDate:'',category:'',status:'',search:'',transactionType:'',itemId:''}); const [report,setReport]=useState(null); const [state,setState]=useState('loading'); const [error,setError]=useState(''); const [exporting,setExporting]=useState(false); const [notice,setNotice]=useState(''); const [items,setItems]=useState([]);
  const load=useCallback(async()=>{setState('loading');setError('');try{const result=await window.smartWater.getReportData(type,filters);if(!result?.ok||!result.data)throw new Error(result?.error||'Could not prepare report.');setReport(result.data);setState('ready');}catch(e){setError(e.message||'Could not prepare report.');setState('error');}},[type,filters]);
  useEffect(()=>{load();},[load]); useEffect(()=>{window.smartWater?.listInventoryItems?.().then((result)=>{if(result?.ok&&Array.isArray(result.data))setItems(result.data);}).catch(()=>{});},[]);
- const categoryOptions=useMemo(()=>type==='assets'?assetCategories:type==='inventory'||type==='stockMovements'?inventoryCategories:type==='finance'?['Operations','Maintenance','Repairs','Administration','Other']:[],[type]);
- const statusOptions=type==='assets'?['Active','Under Maintenance','Inactive','Retired']:type==='inventory'?['In stock','Low stock','Out of stock']:type==='maintenance'?['Scheduled','In Progress','Completed','Cancelled']:[];
+ const categoryOptions=useMemo(()=>type==='assets'?assetCategories:type==='inventory'||type==='stockMovements'?inventoryCategories:type==='finance'?[...incomeCategories,...expenseCategories]:[],[type]);
+ const statusOptions=type==='assets'?assetStatuses:type==='inventory'?['In stock','Low stock','Out of stock']:type==='maintenance'?['Scheduled','In Progress','Completed','Cancelled']:[];
  function change(key,value){setFilters((old)=>({...old,[key]:value}));setNotice('');}
  async function exportPdf(){setExporting(true);setError('');setNotice('');try{const result=await window.smartWater.exportReportPdf(type,filters);if(!result?.ok)throw new Error(result?.error||'Could not export PDF.');if(result.cancelled)setNotice('PDF export cancelled.');else setNotice(`PDF saved: ${result.data.fileName}`);}catch(e){setError(e.message||'Could not export PDF.');}finally{setExporting(false);}}
  return <div className="reports-page"><div className="reports-intro"><div><p>Build operational reports from records saved in this SmartWater workspace.</p><span><FileBarChart2 size={14}/> Local records · generated on demand</span></div><button className="button-primary" onClick={exportPdf} disabled={state!=='ready'||exporting}><Download size={15}/>{exporting?'Creating PDF…':'Export PDF'}</button></div>

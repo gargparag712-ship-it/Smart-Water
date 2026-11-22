@@ -178,4 +178,4 @@ function createFinanceService(dataDirectory, serialize = createOperationQueue())
   };
 }
 
-module.exports = { FinanceServiceError, CATEGORIES, PAYMENT_METHODS: [...PAYMENT_METHODS], createFinanceService, localDateString, paiseFromRupees, summarizeTransactions };
+module.exports = { FinanceServiceError, CATEGORIES, PAYMENT_METHODS: [...PAYMENT_METHODS], validateStoredTransactions, validateStoredBudgets, createFinanceService, localDateString, paiseFromRupees, summarizeTransactions };

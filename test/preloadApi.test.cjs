@@ -36,10 +36,11 @@ test('preload exposes only scoped application IPC functions', async () => {
   assert.equal(exposedName, 'smartWater');
   assert.deepEqual(Object.keys(exposedApi).sort(), [
     'checkHealth', 'createAsset', 'createBudget', 'createFinancialTransaction', 'createInventoryItem', 'createMaintenanceRecord', 'createSupplier',
-    'deleteAsset', 'deleteBudget', 'deleteFinancialTransaction', 'deleteInventoryItem', 'deleteSupplier', 'exportReportPdf',
+    'deleteAsset', 'deleteBudget', 'deleteFinancialTransaction', 'deleteInventoryItem', 'deleteSupplier', 'exportBackup', 'exportReportPdf',
     'getAsset', 'getFinanceSummary', 'getFinancialTransaction', 'getInventoryItem', 'getMaintenanceRecord', 'getMaintenanceSummary', 'getReportData', 'getSupplier', 'listAssetMaintenanceHistory',
     'listAssets', 'listBudgets', 'listFinanceMaintenanceOrders', 'listFinancialTransactions', 'listInventoryItems', 'listInventoryTransactions',
-    'listMaintenanceAssets', 'listMaintenanceRecords', 'listSuppliers', 'stockIn', 'stockOut', 'updateAsset', 'updateBudget',
+    'listMaintenanceAssets', 'listMaintenanceRecords', 'listSuppliers', 'restoreBackup',
+    'stockIn', 'stockOut', 'updateAsset', 'updateBudget',
     'updateFinancialTransaction', 'updateInventoryItem', 'updateMaintenanceRecord', 'updateMaintenanceStatus', 'updateSupplier',
   ]);
   await exposedApi.checkHealth();
@@ -82,6 +83,8 @@ test('preload exposes only scoped application IPC functions', async () => {
   await exposedApi.deleteSupplier('supplier-id');
   await exposedApi.getReportData('finance', { fromDate: '2026-01-01' });
   await exposedApi.exportReportPdf('finance', {});
+  await exposedApi.exportBackup();
+  await exposedApi.restoreBackup();
   assert.deepEqual(calls, [
     ['app:health-check'],
     ['assets:list'],
@@ -123,5 +126,7 @@ test('preload exposes only scoped application IPC functions', async () => {
     ['suppliers:delete', 'supplier-id'],
     ['reports:data', 'finance', { fromDate: '2026-01-01' }],
     ['reports:export-pdf', 'finance', {}],
+    ['backup:export'],
+    ['backup:restore'],
   ]);
 });

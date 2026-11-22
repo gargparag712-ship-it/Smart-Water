@@ -9,7 +9,8 @@
     "build": "vite build",
     "test": "node --test",
     "start": "node electron/launch.cjs",
-    "dist": "npm run build && electron-builder"
+    "dist": "npm run build && electron-builder",
+    "dist:mac": "npm run build && electron-builder --mac dmg --arm64"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",
@@ -22,7 +23,7 @@
     "@vitejs/plugin-react": "^4.3.4",
     "concurrently": "^9.1.2",
     "electron": "^45.4.1",
-    "electron-builder": "^26.18.0",
+    "electron-builder": "^26.18.1",
     "vite": "^6.0.5",
     "wait-on": "^8.0.1"
   },
@@ -30,12 +31,21 @@
     "appId": "org.smartwater.desktop",
     "productName": "SmartWater",
     "files": [
-      "dist/**",
-      "electron/**",
-      "package.json"
+      "dist/**/*",
+      "electron/**/*",
+      "package.json",
+      "!electron/**/*.test.*"
     ],
+    "asar": true,
     "directories": {
-      "buildResources": "build"
+      "buildResources": "build",
+      "output": "release"
+    },
+    "mac": {
+      "target": [{ "target": "dmg", "arch": ["arm64"] }],
+      "category": "public.app-category.utilities",
+      "artifactName": "${productName}-${version}-${arch}.${ext}",
+      "icon": "build/icon.icns"
     }
   }
 }

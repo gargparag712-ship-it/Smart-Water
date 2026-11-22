@@ -145,4 +145,4 @@ function createMaintenanceService(dataDirectory, serialize = createOperationQueu
   };
 }
 
-module.exports = { MaintenanceServiceError, TYPES: [...TYPES], PRIORITIES: [...PRIORITIES], STATUSES: [...STATUSES], createMaintenanceService, localToday };
+module.exports = { MaintenanceServiceError, TYPES: [...TYPES], PRIORITIES: [...PRIORITIES], STATUSES: [...STATUSES], validateStoredRecords, createMaintenanceService, localToday };

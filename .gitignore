@@ -3,3 +3,16 @@ dist/
 release/
 .vite/
 *.log
+.DS_Store
+**/.DS_Store
+.AppleDouble
+._*
+Thumbs.db
+Desktop.ini
+.env
+.env.*
+!.env.example
+*.tmp
+*.temp
+*.swp
+*~

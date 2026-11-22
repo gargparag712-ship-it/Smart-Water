@@ -205,4 +205,4 @@ function createAssetService(dataDirectory, serialize = createOperationQueue()) {
   };
 }
 
-module.exports = { AssetServiceError, CATEGORIES: [...CATEGORIES], CONDITIONS: [...CONDITIONS], STATUSES: [...STATUSES], createAssetService };
+module.exports = { AssetServiceError, CATEGORIES: [...CATEGORIES], CONDITIONS: [...CONDITIONS], STATUSES: [...STATUSES], validateStoredCollection, createAssetService };
